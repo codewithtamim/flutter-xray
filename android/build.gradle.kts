@@ -29,7 +29,8 @@ plugins {
 android {
     namespace = "io.github.codewithtamim.flutter_xray"
 
-    compileSdk = 36
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -39,8 +40,6 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
-
-    // TODO: migrate to compilerOptions DSL when Kotlin Gradle plugin is updated
 
     sourceSets {
         getByName("main") {
