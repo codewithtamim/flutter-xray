@@ -6,8 +6,8 @@ repository: https://github.com/codewithtamim/flutter-xray.git
 issue_tracker: https://github.com/codewithtamim/flutter-xray/issues
 
 environment:
-  sdk: ^3.11.1
-  flutter: '>=3.3.0'
+  sdk: ^3.5.0
+  flutter: '>=3.24.0'
 
 dependencies:
   flutter:
