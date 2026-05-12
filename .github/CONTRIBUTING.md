@@ -30,6 +30,20 @@ flutter run
 - Run `flutter test` to make sure Dart tests pass.
 - For Android, run `./gradlew :flutter_xray:testDebugUnitTest` inside `example/android`.
 
+### Commit messages
+
+We follow the Conventional Commits specification. Use one of these types:
+
+- `feat:` for new features
+- `fix:` for bug fixes
+- `docs:` for documentation changes
+- `style:` for formatting changes that do not affect code logic
+- `refactor:` for code refactoring
+- `test:` for adding or updating tests
+- `chore:` for build, CI, or tooling changes
+
+Keep the first line under 72 characters. Use the body to explain what and why, not how. If your change fixes an issue, add `Fixes #123` at the end of the body.
+
 ### Pull requests
 
 - Keep each pull request focused on a single change.
