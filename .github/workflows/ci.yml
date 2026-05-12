@@ -50,7 +50,7 @@ jobs:
           channel: 'stable'
 
       - name: Build native libraries
-        run: python3 scripts/build_and_wire.py
+        run: python3 scripts/build_and_wire.py android
 
       - name: Build Android example
         run: |
@@ -79,7 +79,7 @@ jobs:
           channel: 'stable'
 
       - name: Build native libraries
-        run: python3 scripts/build_and_wire.py
+        run: python3 scripts/build_and_wire.py apple
 
       - name: Build iOS example
         run: |

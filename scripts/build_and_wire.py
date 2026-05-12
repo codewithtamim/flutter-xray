@@ -9,7 +9,9 @@ This script:
   4. Patches native build files to reference the artifacts.
 
 Usage:
-  python3 scripts/build_and_wire.py
+  python3 scripts/build_and_wire.py [android|apple|all]
+
+Defaults to "all" if no argument is given.
 """
 
 import os
@@ -46,7 +48,6 @@ def ensure_dir(path):
 
 
 def clean_old_artifacts():
-    """Remove previously copied artifacts so we don't have stale files."""
     aar_dst = os.path.join(ANDROID_LIBS_DIR, AAR_NAME)
     if os.path.exists(aar_dst):
         print(f"Removing old {aar_dst}")
@@ -104,139 +105,27 @@ def wire_macos():
     print(f"Copied {src} -> {dst}")
 
 
-def patch_android_build_gradle():
-    """Ensure android/build.gradle.kts references the local AAR."""
-    gradle_path = os.path.join(PROJECT_ROOT, "android", "build.gradle.kts")
-    with open(gradle_path, "r") as f:
-        content = f.read()
-
-    changes = []
-
-    if "flatDir" not in content:
-        old = """allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}"""
-        new = """allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        flatDir {
-            dirs("libs")
-        }
-    }
-}"""
-        if old in content:
-            content = content.replace(old, new)
-            changes.append("Added flatDir repository")
-
-    aar_dep = 'implementation(name = "libXray", ext = "aar")'
-    if aar_dep not in content:
-        # Add near the existing dependencies block
-        old_dep = """dependencies {
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.mockito:mockito-core:5.0.0")
-}"""
-        new_dep = """dependencies {
-    implementation(name = "libXray", ext = "aar")
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.mockito:mockito-core:5.0.0")
-}"""
-        if old_dep in content:
-            content = content.replace(old_dep, new_dep)
-            changes.append("Added libXray AAR dependency")
-
-    if changes:
-        with open(gradle_path, "w") as f:
-            f.write(content)
-        print(f"Patched {gradle_path}: {', '.join(changes)}")
-    else:
-        print(f"No changes needed for {gradle_path}")
-
-
-def patch_ios_podspec():
-    """Ensure iOS podspec references the vendored xcframework."""
-    podspec_path = os.path.join(IOS_DIR, "flutter_xray.podspec")
-    with open(podspec_path, "r") as f:
-        content = f.read()
-
-    changes = []
-    vendored_line = "s.vendored_frameworks = 'LibXray.xcframework'"
-
-    if vendored_line not in content:
-
-        lines = content.splitlines()
-        for i in range(len(lines) - 1, -1, -1):
-            if lines[i].strip() == "end":
-                lines.insert(i, f"  {vendored_line}")
-                break
-        content = "\n".join(lines) + "\n"
-        changes.append("Added vendored_frameworks")
-
-    if "s.platform = :ios, '15.0'" not in content:
-        content = content.replace("s.platform = :ios, '13.0'", "s.platform = :ios, '15.0'")
-        changes.append("Updated minimum iOS version to 15.0")
-
-    if changes:
-        with open(podspec_path, "w") as f:
-            f.write(content)
-        print(f"Patched {podspec_path}: {', '.join(changes)}")
-    else:
-        print(f"No changes needed for {podspec_path}")
-
-
-def patch_macos_podspec():
-    """Ensure macOS podspec references the vendored xcframework."""
-    podspec_path = os.path.join(MACOS_DIR, "flutter_xray.podspec")
-    with open(podspec_path, "r") as f:
-        content = f.read()
-
-    changes = []
-    vendored_line = "s.vendored_frameworks = 'LibXray.xcframework'"
-
-    if vendored_line not in content:
-        lines = content.splitlines()
-        for i in range(len(lines) - 1, -1, -1):
-            if lines[i].strip() == "end":
-                lines.insert(i, f"  {vendored_line}")
-                break
-        content = "\n".join(lines) + "\n"
-        changes.append("Added vendored_frameworks")
-
-    
-    if "s.platform = :osx, '11.0'" not in content:
-        content = content.replace("s.platform = :osx, '10.11'", "s.platform = :osx, '11.0'")
-        changes.append("Updated minimum macOS version to 11.0")
-
-    if changes:
-        with open(podspec_path, "w") as f:
-            f.write(content)
-        print(f"Patched {podspec_path}: {', '.join(changes)}")
-    else:
-        print(f"No changes needed for {podspec_path}")
-
-
 def main():
+    platform = sys.argv[1] if len(sys.argv) > 1 else "all"
+    if platform not in ("android", "apple", "all"):
+        print(f"Unknown platform: {platform}")
+        print("Usage: python3 scripts/build_and_wire.py [android|apple|all]")
+        sys.exit(1)
+
     print(f"Project root: {PROJECT_ROOT}")
     print(f"libXray dir: {LIBXRAY_DIR}")
+    print(f"Target platform: {platform}")
 
     clean_old_artifacts()
 
-    # Build
-    build_android()
-    build_apple()
+    if platform in ("android", "all"):
+        build_android()
+        wire_android()
 
-   
-    wire_android()
-    wire_ios()
-    wire_macos()
-
-    # Patch build configs
-    patch_android_build_gradle()
-    patch_ios_podspec()
-    patch_macos_podspec()
+    if platform in ("apple", "all"):
+        build_apple()
+        wire_ios()
+        wire_macos()
 
     print("\n=== Done ===")
     print("Next steps:")
