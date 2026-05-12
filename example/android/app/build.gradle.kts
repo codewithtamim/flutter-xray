@@ -7,8 +7,8 @@ plugins {
 
 android {
     namespace = "io.github.codewithtamim.flutter_xray_example"
-    compileSdk = 36
-    ndkVersion = "27.0.12077973"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
